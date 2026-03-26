@@ -13,30 +13,53 @@ export default function DiseasePage() {
 
   const processFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return
+
+    // 🔥 file size limit (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image too large (max 5MB)")
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = (e) => {
       setPreview(e.target.result)
       setBase64(e.target.result)
-      setResult(null); setError('')
+      setResult(null)
+      setError('')
     }
     reader.readAsDataURL(file)
   }
 
-  const onFileChange  = (e) => processFile(e.target.files[0])
-  const onDrop        = (e) => { e.preventDefault(); setDragging(false); processFile(e.dataTransfer.files[0]) }
-  const onDragOver    = (e) => { e.preventDefault(); setDragging(true) }
-  const onDragLeave   = ()  => setDragging(false)
+  const onFileChange = (e) => processFile(e.target.files[0])
+
+  const onDrop = (e) => {
+    e.preventDefault()
+    setDragging(false)
+    processFile(e.dataTransfer.files[0])
+  }
+
+  const onDragOver = (e) => {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  const onDragLeave = () => setDragging(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!base64) return
-    setLoading(true); setError(''); setResult(null)
+
+    setLoading(true)
+    setError('')
+    setResult(null)
+
     try {
-      const res  = await fetch('http://127.0.0.1:5000/disease', {
+      const res = await fetch('http://127.0.0.1:5000/disease', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64 }),
       })
+
       const data = await res.json()
       setResult(data)
     } catch {
@@ -58,13 +81,16 @@ export default function DiseasePage() {
         <div className="card-header">
           <span className="card-icon">🔬</span>
           <h1 className="card-title">Disease Prediction</h1>
-          <p className="card-subtitle">Upload a photo of a chilli plant leaf to detect diseases.</p>
+          <p className="card-subtitle">
+            Upload a photo of a chilli plant leaf to detect diseases.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="form">
-          {/* Drop zone */}
+
+          {/* 🔥 Drop Zone */}
           <div
-            className={`drop-zone ${dragging ? 'drop-zone--active' : ''} ${preview ? 'drop-zone--filled' : ''}`}
+            className={`drop-zone ${dragging ? 'drop-zone--active' : ''}`}
             onClick={() => inputRef.current.click()}
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -75,50 +101,74 @@ export default function DiseasePage() {
             ) : (
               <div className="drop-placeholder">
                 <span className="drop-icon">📷</span>
-                <span className="drop-text">Drag & drop or <u>click to upload</u></span>
-                <span className="drop-hint">JPG, PNG, WEBP supported</span>
+                <span className="drop-text">
+                  Drag & drop or <u>click to upload</u>
+                </span>
+                <span className="drop-hint">
+                  JPG, PNG, WEBP (max 5MB)
+                </span>
               </div>
             )}
+
             <input
               ref={inputRef}
               type="file"
               accept="image/*"
-              style={{ display: 'none' }}
+              hidden
               onChange={onFileChange}
             />
           </div>
 
+          {/* Remove image */}
           {preview && (
             <button
               type="button"
               className="clear-btn"
-              onClick={() => { setPreview(null); setBase64(null); setResult(null) }}
+              onClick={() => {
+                setPreview(null)
+                setBase64(null)
+                setResult(null)
+              }}
             >
               ✕ Remove image
             </button>
           )}
 
-          <button className="submit-btn" type="submit" disabled={!base64 || loading}>
+          {/* Submit */}
+          <button
+            className="submit-btn"
+            type="submit"
+            disabled={!base64 || loading}
+          >
             {loading ? <span className="spinner" /> : 'Analyse Leaf'}
           </button>
         </form>
 
-        {error && <div className="result-box result-box--error">{error}</div>}
+        {error && (
+          <div className="result-box result-box--error">{error}</div>
+        )}
 
         {result && (
           <div className="result-box result-box--success disease-result">
             <span className="result-label">Detected Condition</span>
-            <span className="result-value">{result.disease.replace(/_/g, ' ')}</span>
+            <span className="result-value">
+              {result.disease.replace(/_/g, ' ')}
+            </span>
+
             <div className="confidence-bar-wrap">
               <div
                 className="confidence-bar"
                 style={{
                   width: `${result.confidence}%`,
-                  background: confidenceColor(result.confidence)
+                  background: confidenceColor(result.confidence),
                 }}
               />
             </div>
-            <span className="confidence-label" style={{ color: confidenceColor(result.confidence) }}>
+
+            <span
+              className="confidence-label"
+              style={{ color: confidenceColor(result.confidence) }}
+            >
               {result.confidence}% confidence
             </span>
           </div>

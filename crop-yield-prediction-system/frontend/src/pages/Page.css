@@ -2,16 +2,16 @@
   min-height: calc(100vh - 64px);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 2.5rem 1rem 3rem;
+  align-items: center; /* 🔥 center vertically */
+  padding: 1.5rem;
 }
 
 /* ── Card ─────────────────────────────────────────────────── */
 .card {
   position: relative;
   width: 100%;
-  max-width: 560px;
-  padding: 2.5rem 2.5rem 2rem;
+  max-width: 600px; /* slightly bigger */
+  padding: 2.75rem 2.5rem 2.25rem;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   background: linear-gradient(
@@ -58,14 +58,14 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 1rem; /* 🔥 add breathing room */
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .field {
@@ -130,7 +130,8 @@ select.field-input {
   font-family: "Noto Sans", sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+  letter-spacing: 0.03em;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
   display: flex;
@@ -139,7 +140,7 @@ select.field-input {
   min-height: 46px;
 }
 
-.submit-btn:hover:not(:disabled)  { background: #2a2a2a; }
+.submit-btn:hover:not(:disabled)  { background: #222; }
 .submit-btn:active:not(:disabled) { transform: scale(0.98); }
 .submit-btn:disabled              { opacity: 0.5; cursor: not-allowed; }
 
@@ -160,6 +161,18 @@ select.field-input {
   padding: 1.25rem 1.5rem;
   border-radius: 14px;
   text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .result-box--success {
@@ -192,6 +205,15 @@ select.field-input {
   font-size: 2rem;
   color: #111;
   text-transform: capitalize;
+}
+
+.field-input:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.field-input:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
