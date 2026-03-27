@@ -32,7 +32,8 @@ export default function FertilizerPage() {
         }),
       })
       const data = await res.json()
-      setResult(data.recommended_fertilizer)
+      setResult(data.recommended_fertilizer);
+      console.log(data.recommended_fertilizer);
     } catch {
       setError('Could not reach the server. Is Flask running?')
     } finally {
