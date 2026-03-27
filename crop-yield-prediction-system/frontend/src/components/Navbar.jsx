@@ -4,7 +4,7 @@ import './Navbar.css'
 const links = [
   { to: '/',           label: 'Crop',        icon: '🌾' },
   { to: '/fertilizer', label: 'Fertilizer',  icon: '🧪' },
-  { to: '/disease',    label: 'Disease',      icon: '🔬' },
+  // { to: '/disease',    label: 'Disease',      icon: '🔬' },
 ]
 
 export default function Navbar() {

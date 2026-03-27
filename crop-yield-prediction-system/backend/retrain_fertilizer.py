@@ -1,45 +1,58 @@
-"""
-Run this script ONCE after retraining your fertilizer model.
-It saves the LabelEncoder and column order needed by the Flask backend.
-
-Place this file next to your Fertlizer_prediction.ipynb and run it
-in the same environment where you trained the model.
-"""
-
 import pandas as pd
+import numpy as np
 import pickle
-from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
+
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from imblearn.over_sampling import RandomOverSampler
 
-# ── 1. Load data (same as your notebook) ──────────────────────────────────────
-df = pd.read_csv("Crop and fertilizer dataset (1).csv")
+# ─── Load Dataset ─────────────────────────────────────────────
+df = pd.read_csv("fertilizer_dataset.csv")
 
-X = df.drop(["Fertilizer", "Link"], axis=1)
+# ─── Features & Target ────────────────────────────────────────
+X = df.drop("Fertilizer_Name", axis=1)
+y = df["Fertilizer_Name"]
+
+# ─── Encode Categorical (Soil Color etc.) ─────────────────────
 X = pd.get_dummies(X)
 
+# ─── Save column order (VERY IMPORTANT) ───────────────────────
+columns = X.columns
+
+# ─── Encode Labels ────────────────────────────────────────────
 le = LabelEncoder()
-y = le.fit_transform(df["Fertilizer"])
+y_encoded = le.fit_transform(y)
 
-# ── 2. Train model ─────────────────────────────────────────────────────────────
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# ─── Balance Dataset (CRITICAL FIX) ───────────────────────────
+ros = RandomOverSampler(random_state=42)
+X_res, y_res = ros.fit_resample(X, y_encoded)
 
-model = RandomForestClassifier(n_estimators=100)
+# ─── Scale Features ───────────────────────────────────────────
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_res)
+
+# ─── Train/Test Split ─────────────────────────────────────────
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y_res, test_size=0.2, random_state=42
+)
+
+# ─── Train Model ──────────────────────────────────────────────
+model = RandomForestClassifier(
+    n_estimators=300,
+    max_depth=None,
+    class_weight='balanced',
+    random_state=42
+)
+
 model.fit(X_train, y_train)
 
-# ── 3. Save ALL three artifacts ────────────────────────────────────────────────
-with open("fertilizer_recommendation.pkl", "wb") as f:
-    pickle.dump(model, f)
+# ─── Accuracy Check ───────────────────────────────────────────
+print("Train Accuracy:", model.score(X_train, y_train))
+print("Test Accuracy:", model.score(X_test, y_test))
 
-with open("fertilizer_le.pkl", "wb") as f:
-    pickle.dump(le, f)
-
-with open("fertilizer_columns.pkl", "wb") as f:
-    pickle.dump(list(X.columns), f)
-
-print("✅ Saved: fertilizer_recommendation.pkl")
-print("✅ Saved: fertilizer_le.pkl")
-print("✅ Saved: fertilizer_columns.pkl")
-print(f"\nColumns ({len(X.columns)}):")
-for c in X.columns:
-    print(" ", c)
+# ─── Save Everything ──────────────────────────────────────────
+pickle.dump(model, open("fertilizer_recommendation.pkl", "wb"))
+pickle.dump(le, open("fertilizer_le.pkl", "wb"))
+pickle.dump(list(columns), open("fertilizer_columns.pkl", "wb"))
+pickle.dump(scaler, open("fertilizer_scaler.pkl", "wb"))
